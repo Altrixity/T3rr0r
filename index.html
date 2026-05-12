@@ -94,13 +94,9 @@
 <body>
   <div class="container">
 
-    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-      <select id="proxySelect">
-        <option value="https://r.jina.ai/http://">Jina AI</option>
-        <option value="https://api.codetabs.com/v1/proxy?quest=">CodeTabs Alt</option>
-        <option value="https://r.jina.ai/http://m.">Mobile Proxy</option>
-        <option value="DIRECT">DIRECT</option>
-      </select>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-bottom:10px;">
+      <select id="proxySelect"></select>
+      <button onclick="cycleProxy()">Cycle Proxy</button>
     </div>
 
     <h1>Link Checker + Live Preview</h1>
@@ -121,34 +117,70 @@
 
 <script>
 
-function buildProxyUrl(proxy, url) {
-  if (proxy === 'DIRECT') return url;
-  if (proxy.includes('r.jina.ai')) return proxy + url.replace(/^https?:\/\//, '');
-  return proxy + encodeURIComponent(url);
+// NOTE: many proxies WILL fail depending on site blocking/X-Frame-Options
+const proxies = [
+  { name: "AllOrigins RAW", url: "https://api.allorigins.win/raw?url=" },
+  { name: "AllOrigins GET", url: "https://api.allorigins.win/get?url=" },
+  { name: "CodeTabs", url: "https://api.codetabs.com/v1/proxy?quest=" },
+  { name: "ThingProxy", url: "https://thingproxy.freeboard.io/fetch/" },
+  { name: "CorsProxy.io", url: "https://corsproxy.io/?" },
+  { name: "YACDN", url: "https://yacdn.org/proxy/" },
+  { name: "CORS.isomorphic-git", url: "https://cors.isomorphic-git.org/" },
+  { name: "AllOrigins Alt", url: "https://api.allorigins.win/raw?url=" },
+  { name: "Codetabs Alt", url: "https://api.codetabs.com/v1/proxy?quest=" }
+];
+
+let proxyIndex = 0;
+
+const proxySelect = document.getElementById('proxySelect');
+
+function loadProxies() {
+  proxySelect.innerHTML = '';
+  proxies.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.name;
+    proxySelect.appendChild(opt);
+  });
 }
+
+function getProxyUrl(url) {
+  const p = proxies[proxyIndex];
+  return p.url + encodeURIComponent(url);
+}
+
+function cycleProxy() {
+  proxyIndex = (proxyIndex + 1) % proxies.length;
+  proxySelect.value = proxyIndex;
+}
+
+proxySelect.addEventListener('change', (e) => {
+  proxyIndex = parseInt(e.target.value);
+});
+
+loadProxies();
+proxySelect.value = proxyIndex;
 
 async function checkLinks() {
   const url = document.getElementById('urlInput').value.trim();
   const results = document.getElementById('results');
-  const proxy = document.getElementById('proxySelect').value;
   const iframe = document.getElementById('siteFrame');
 
   if (!url) return alert('Enter URL');
 
   results.innerHTML = 'Loading...';
 
-  const fetchUrl = buildProxyUrl(proxy, url);
+  const fetchUrl = getProxyUrl(url);
 
   try {
-    // DIRECT VISUAL LOAD (no rebuild, no scraping)
+    // LIVE VIEW (best effort)
     iframe.src = fetchUrl;
 
-    // fetch for link scanning only
+    // link scan
     const res = await fetch(fetchUrl);
     const html = await res.text();
 
     const base = new URL(url);
-
     const doc = new DOMParser().parseFromString(html, 'text/html');
 
     const links = [...doc.querySelectorAll('a[href]')]
@@ -178,6 +210,5 @@ async function checkLinks() {
 }
 
 </script>
-
 </body>
 </html>
