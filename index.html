@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Website Link Checker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111827;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #1f2937;
+      padding: 24px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 800px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #results {
+      margin-top: 20px;
+      max-height: 500px;
+      overflow-y: auto;
+      border-top: 1px solid #374151;
+      padding-top: 15px;
+    }
+
+    .link-card {
+      background: #374151;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      word-break: break-all;
+    }
+
+    .status {
+      font-size: 14px;
+      margin-top: 6px;
+      opacity: 0.9;
+    }
+
+    .good {
+      color: #22c55e;
+    }
+
+    .bad {
+      color: #ef4444;
+    }
+
+    .loading {
+      text-align: center;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
+      <select id="proxySelect" style="padding:10px; border-radius:10px; background:#374151; color:white; border:none;">
+        <option value="https://r.jina.ai/http://">Jina AI</option>
+        <option value="https://api.allorigins.win/raw?url=">AllOrigins</option>
+        <option value="https://corsproxy.io/?">CorsProxy</option>
+        <option value="https://cors.isomorphic-git.org/">Isomorphic Git</option>
+        <option value="https://thingproxy.freeboard.io/fetch/">ThingProxy</option>
+        <option value="https://yacdn.org/proxy/">YACDN</option>
+        <option value="https://proxy.cors.sh/">CORS.sh</option>
+        <option value="https://crossorigin.me/">CrossOrigin</option>
+        <option value="https://api.codetabs.com/v1/proxy?quest=">CodeTabs</option>
+        <option value="https://cors-anywhere.herokuapp.com/">CORS Anywhere</option>
+        <option value="https://proxy.jsdelivr.net/">JSDelivr Proxy</option>
+        <option value="https://r.jina.ai/http://r.jina.ai/http://">Double Jina</option>
+        <option value="https://r.jina.ai/http://https://">Jina HTTPS</option>
+        <option value="https://r.jina.ai/http://http://">Jina HTTP</option>
+        <option value="https://api.allorigins.win/get?url=">AllOrigins GET</option>
+        <option value="https://api.scraperapi.com/?api_key=demo&url=">ScraperAPI Demo</option>
+        <option value="https://images.weserv.nl/?url=">Weserv</option>
+        <option value="https://miniProxy.example/">MiniProxy</option>
+        <option value="https://proxy.duckduckgo.com/iu/?u=">DuckDuckGo Proxy</option>
+        <option value="https://r.jina.ai/http://r.jina.ai/http://https://">Triple Jina</option>
+        <option value="https://api.allorigins.win/raw?url=https://">AllOrigins HTTPS</option>
+        <option value="https://api.allorigins.win/raw?url=http://">AllOrigins HTTP</option>
+        <option value="https://r.jina.ai/http://raw.githubusercontent.com/">GitHub Raw Proxy</option>
+        <option value="https://proxy.scrapeops.io/v1/?url=">ScrapeOps</option>
+        <option value="https://api.codetabs.com/v1/proxy/?quest=">CodeTabs Alt</option>
+        <option value="https://thingproxy.freeboard.io/fetch/http://">ThingProxy HTTP</option>
+        <option value="https://thingproxy.freeboard.io/fetch/https://">ThingProxy HTTPS</option>
+        <option value="https://r.jina.ai/http://https://www.">WWW Proxy</option>
+        <option value="https://r.jina.ai/http://m.">Mobile Proxy</option>
+        <option value="DIRECT">Direct Connection</option>
+      </select>
+    </div>
+    <h1>Website Link Checker + Preview</h1>
+
+    <div class="input-row">
+      <input type="text" id="urlInput" placeholder="https://example.com" />
+      <button type="button" onclick="checkLinks()">Check</button>
+    </div>
+
+    <div id="results"></div>
+
+    <div id="previewContainer" style="margin-top:20px; display:none;">
+      <h3>Website Preview</h3>
+      <iframe
+        id="siteFrame"
+        style="width:100%; height:500px; border:none; border-radius:12px; background:white;"
+      ></iframe>
+    </div>
+  </div>
+
+  <script>
+    async function checkLinks() {
+      const url = document.getElementById('urlInput').value.trim();
+      const results = document.getElementById('results');
+
+      if (!url) {
+        alert('Please enter a website URL.');
+        return;
+      }
+
+      results.innerHTML = '<p class="loading">Scanning website...</p>';
+
+      const previewContainer = document.getElementById('previewContainer');
+      const selectedProxy = document.getElementById('proxySelect').value;
+      const siteFrame = document.getElementById('siteFrame');
+
+      previewContainer.style.display = 'block';
+
+      // ALWAYS load preview (no toggle)
+      try {
+        if (selectedProxy === 'DIRECT') {
+          siteFrame.src = url;
+        } else if (selectedProxy.includes('r.jina.ai')) {
+          siteFrame.src = selectedProxy + url.replace(/^https?:\/\//, '');
+        } else {
+          siteFrame.src = selectedProxy + encodeURIComponent(url);
+        }
+      } catch (e) {}
+
+      try {
+        let fetchUrl;
+
+        if (selectedProxy === 'DIRECT') {
+          fetchUrl = url;
+        } else if (selectedProxy.includes('r.jina.ai')) {
+          fetchUrl = selectedProxy + url.replace(/^https?:\/\//, '');
+        } else {
+          fetchUrl = selectedProxy + encodeURIComponent(url);
+        }
+
+        const response = await fetch(fetchUrl);
+        const html = await response.text();
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const baseDomain = new URL(url).hostname.replace('www.', '');
+
+        const links = [...doc.querySelectorAll('a[href]')]
+          .map(link => link.href)
+          .filter(link => link.startsWith('http'))
+          .filter((value, index, self) => self.indexOf(value) === index);
+
+        const externalLinks = links.filter(link => {
+          try {
+            const linkDomain = new URL(link).hostname.replace('www.', '');
+            return linkDomain !== baseDomain;
+          } catch {
+            return false;
+          }
+        });
+
+        if (externalLinks.length === 0) {
+          results.innerHTML = '<p>No external links found.</p>';
+          return;
+        }
+
+        results.innerHTML = `<h3>Found ${externalLinks.length} external links</h3>`;
+
+        externalLinks.forEach(link => {
+          const card = document.createElement('div');
+          card.className = 'link-card';
+
+          let domain = 'Unknown';
+
+          try {
+            domain = new URL(link).hostname;
+          } catch {}
+
+          card.innerHTML = `
+            <div><strong>Domain:</strong> ${domain}</div>
+            <div style="margin-top:8px;">
+              <a href="${link}" target="_blank" style="color:#60a5fa;">${link}</a>
+            </div>
+            <div class="status good">External Link</div>
+          `;
+
+          results.appendChild(card);
+        });
+      } catch (error) {
+        results.innerHTML = `
+          <p class="bad">Could not scan the website.</p>
+          <p>${error.message}</p>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
