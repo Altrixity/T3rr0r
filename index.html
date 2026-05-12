@@ -21,7 +21,7 @@
       padding: 24px;
       border-radius: 16px;
       width: 90%;
-      max-width: 800px;
+      max-width: 900px;
       box-shadow: 0 0 20px rgba(0,0,0,0.4);
     }
 
@@ -53,16 +53,11 @@
       color: white;
       font-size: 16px;
       cursor: pointer;
-      transition: 0.2s;
-    }
-
-    button:hover {
-      background: #1d4ed8;
     }
 
     #results {
       margin-top: 20px;
-      max-height: 500px;
+      max-height: 400px;
       overflow-y: auto;
       border-top: 1px solid #374151;
       padding-top: 15px;
@@ -76,176 +71,113 @@
       word-break: break-all;
     }
 
-    .status {
-      font-size: 14px;
-      margin-top: 6px;
-      opacity: 0.9;
+    .good { color: #22c55e; }
+    .bad { color: #ef4444; }
+
+    iframe {
+      width: 100%;
+      height: 520px;
+      border: none;
+      border-radius: 12px;
+      background: white;
     }
 
-    .good {
-      color: #22c55e;
-    }
-
-    .bad {
-      color: #ef4444;
-    }
-
-    .loading {
-      text-align: center;
-      opacity: 0.8;
+    select {
+      padding: 10px;
+      border-radius: 10px;
+      background: #374151;
+      color: white;
+      border: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
+
     <div style="display:flex; justify-content:flex-end; margin-bottom:10px;">
-      <select id="proxySelect" style="padding:10px; border-radius:10px; background:#374151; color:white; border:none;">
+      <select id="proxySelect">
         <option value="https://r.jina.ai/http://">Jina AI</option>
-        <option value="https://api.allorigins.win/raw?url=">AllOrigins</option>
-        <option value="https://corsproxy.io/?">CorsProxy</option>
-        <option value="https://cors.isomorphic-git.org/">Isomorphic Git</option>
-        <option value="https://thingproxy.freeboard.io/fetch/">ThingProxy</option>
-        <option value="https://yacdn.org/proxy/">YACDN</option>
-        <option value="https://proxy.cors.sh/">CORS.sh</option>
-        <option value="https://crossorigin.me/">CrossOrigin</option>
-        <option value="https://api.codetabs.com/v1/proxy?quest=">CodeTabs</option>
-        <option value="https://cors-anywhere.herokuapp.com/">CORS Anywhere</option>
-        <option value="https://proxy.jsdelivr.net/">JSDelivr Proxy</option>
-        <option value="https://r.jina.ai/http://r.jina.ai/http://">Double Jina</option>
-        <option value="https://r.jina.ai/http://https://">Jina HTTPS</option>
-        <option value="https://r.jina.ai/http://http://">Jina HTTP</option>
-        <option value="https://api.allorigins.win/get?url=">AllOrigins GET</option>
-        <option value="https://api.scraperapi.com/?api_key=demo&url=">ScraperAPI Demo</option>
-        <option value="https://images.weserv.nl/?url=">Weserv</option>
-        <option value="https://miniProxy.example/">MiniProxy</option>
-        <option value="https://proxy.duckduckgo.com/iu/?u=">DuckDuckGo Proxy</option>
-        <option value="https://r.jina.ai/http://r.jina.ai/http://https://">Triple Jina</option>
-        <option value="https://api.allorigins.win/raw?url=https://">AllOrigins HTTPS</option>
-        <option value="https://api.allorigins.win/raw?url=http://">AllOrigins HTTP</option>
-        <option value="https://r.jina.ai/http://raw.githubusercontent.com/">GitHub Raw Proxy</option>
-        <option value="https://proxy.scrapeops.io/v1/?url=">ScrapeOps</option>
-        <option value="https://api.codetabs.com/v1/proxy/?quest=">CodeTabs Alt</option>
-        <option value="https://thingproxy.freeboard.io/fetch/http://">ThingProxy HTTP</option>
-        <option value="https://thingproxy.freeboard.io/fetch/https://">ThingProxy HTTPS</option>
-        <option value="https://r.jina.ai/http://https://www.">WWW Proxy</option>
+        <option value="https://api.codetabs.com/v1/proxy?quest=">CodeTabs Alt</option>
         <option value="https://r.jina.ai/http://m.">Mobile Proxy</option>
-        <option value="DIRECT">Direct Connection</option>
+        <option value="DIRECT">DIRECT</option>
       </select>
     </div>
-    <h1>Website Link Checker + Preview</h1>
+
+    <h1>Link Checker + Live Preview</h1>
 
     <div class="input-row">
-      <input type="text" id="urlInput" placeholder="https://example.com" />
-      <button type="button" onclick="checkLinks()">Check</button>
+      <input id="urlInput" placeholder="https://example.com" />
+      <button onclick="checkLinks()">Check</button>
     </div>
 
     <div id="results"></div>
 
-    <div id="previewContainer" style="margin-top:20px; display:none;">
-      <h3>Website Preview</h3>
-      <iframe
-        id="siteFrame"
-        style="width:100%; height:500px; border:none; border-radius:12px; background:white;"
-      ></iframe>
+    <div style="margin-top:20px;">
+      <h3>Site Preview</h3>
+      <iframe id="siteFrame"></iframe>
     </div>
+
   </div>
 
-  <script>
-    async function checkLinks() {
-      const url = document.getElementById('urlInput').value.trim();
-      const results = document.getElementById('results');
+<script>
 
-      if (!url) {
-        alert('Please enter a website URL.');
-        return;
-      }
+function buildProxyUrl(proxy, url) {
+  if (proxy === 'DIRECT') return url;
+  if (proxy.includes('r.jina.ai')) return proxy + url.replace(/^https?:\/\//, '');
+  return proxy + encodeURIComponent(url);
+}
 
-      results.innerHTML = '<p class="loading">Scanning website...</p>';
+async function checkLinks() {
+  const url = document.getElementById('urlInput').value.trim();
+  const results = document.getElementById('results');
+  const proxy = document.getElementById('proxySelect').value;
+  const iframe = document.getElementById('siteFrame');
 
-      const previewContainer = document.getElementById('previewContainer');
-      const selectedProxy = document.getElementById('proxySelect').value;
-      const siteFrame = document.getElementById('siteFrame');
+  if (!url) return alert('Enter URL');
 
-      previewContainer.style.display = 'block';
+  results.innerHTML = 'Loading...';
 
-      // ALWAYS load preview (no toggle)
+  const fetchUrl = buildProxyUrl(proxy, url);
+
+  try {
+    // DIRECT VISUAL LOAD (no rebuild, no scraping)
+    iframe.src = fetchUrl;
+
+    // fetch for link scanning only
+    const res = await fetch(fetchUrl);
+    const html = await res.text();
+
+    const base = new URL(url);
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+
+    const links = [...doc.querySelectorAll('a[href]')]
+      .map(a => a.href)
+      .filter(h => h.startsWith('http'));
+
+    const external = links.filter(l => {
       try {
-        if (selectedProxy === 'DIRECT') {
-          siteFrame.src = url;
-        } else if (selectedProxy.includes('r.jina.ai')) {
-          siteFrame.src = selectedProxy + url.replace(/^https?:\/\//, '');
-        } else {
-          siteFrame.src = selectedProxy + encodeURIComponent(url);
-        }
-      } catch (e) {}
-
-      try {
-        let fetchUrl;
-
-        if (selectedProxy === 'DIRECT') {
-          fetchUrl = url;
-        } else if (selectedProxy.includes('r.jina.ai')) {
-          fetchUrl = selectedProxy + url.replace(/^https?:\/\//, '');
-        } else {
-          fetchUrl = selectedProxy + encodeURIComponent(url);
-        }
-
-        const response = await fetch(fetchUrl);
-        const html = await response.text();
-
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        const baseDomain = new URL(url).hostname.replace('www.', '');
-
-        const links = [...doc.querySelectorAll('a[href]')]
-          .map(link => link.href)
-          .filter(link => link.startsWith('http'))
-          .filter((value, index, self) => self.indexOf(value) === index);
-
-        const externalLinks = links.filter(link => {
-          try {
-            const linkDomain = new URL(link).hostname.replace('www.', '');
-            return linkDomain !== baseDomain;
-          } catch {
-            return false;
-          }
-        });
-
-        if (externalLinks.length === 0) {
-          results.innerHTML = '<p>No external links found.</p>';
-          return;
-        }
-
-        results.innerHTML = `<h3>Found ${externalLinks.length} external links</h3>`;
-
-        externalLinks.forEach(link => {
-          const card = document.createElement('div');
-          card.className = 'link-card';
-
-          let domain = 'Unknown';
-
-          try {
-            domain = new URL(link).hostname;
-          } catch {}
-
-          card.innerHTML = `
-            <div><strong>Domain:</strong> ${domain}</div>
-            <div style="margin-top:8px;">
-              <a href="${link}" target="_blank" style="color:#60a5fa;">${link}</a>
-            </div>
-            <div class="status good">External Link</div>
-          `;
-
-          results.appendChild(card);
-        });
-      } catch (error) {
-        results.innerHTML = `
-          <p class="bad">Could not scan the website.</p>
-          <p>${error.message}</p>
-        `;
+        return new URL(l).hostname !== base.hostname;
+      } catch {
+        return false;
       }
-    }
-  </script>
+    });
+
+    results.innerHTML = `<b>${external.length} external links</b>`;
+
+    external.forEach(l => {
+      const div = document.createElement('div');
+      div.className = 'link-card';
+      div.innerHTML = `<a href="${l}" target="_blank">${l}</a><div class="good">external</div>`;
+      results.appendChild(div);
+    });
+
+  } catch (e) {
+    results.innerHTML = '<span class="bad">Failed to load</span> ' + e.message;
+  }
+}
+
+</script>
+
 </body>
 </html>
