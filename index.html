@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Web Proxy Browser</title>
+  <title>T3rr0r Proxy Browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -59,7 +59,8 @@
 async function registerSW() {
   if ("serviceWorker" in navigator) {
     try {
-      await navigator.serviceWorker.register("sw.js");
+      // IMPORTANT: repo path included
+      await navigator.serviceWorker.register("/T3rr0r/sw.js");
       console.log("Service worker registered");
     } catch (e) {
       console.error("SW registration failed", e);
@@ -75,13 +76,12 @@ function go() {
 
   let target = input;
 
-  // If it's not a URL, treat it as a search query
   if (!input.startsWith("http://") && !input.startsWith("https://")) {
     target = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
   }
 
-  // IMPORTANT: No leading slash for GitHub Pages
-  iframe.src = "proxy/" + btoa(target);
+  // IMPORTANT: repo path included
+  iframe.src = "/T3rr0r/proxy/" + btoa(target);
 }
 </script>
 
