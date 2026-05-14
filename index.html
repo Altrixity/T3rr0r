@@ -5,45 +5,11 @@
   <title>T3rr0r Proxy Browser</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #eee;
-    }
-
-    #top {
-      padding: 10px;
-      background: #222;
-      display: flex;
-      gap: 10px;
-    }
-
-    #url {
-      flex: 1;
-      padding: 10px;
-      border-radius: 6px;
-      border: none;
-      font-size: 16px;
-      outline: none;
-    }
-
-    button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
-      background: #4a8;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    iframe {
-      width: 100%;
-      height: calc(100vh - 60px);
-      border: none;
-      background: black;
-    }
+    body { margin: 0; font-family: Arial; background: #111; color: #eee; }
+    #top { padding: 10px; background: #222; display: flex; gap: 10px; }
+    #url { flex: 1; padding: 10px; border-radius: 6px; border: none; font-size: 16px; }
+    button { padding: 10px 20px; border: none; border-radius: 6px; background: #4a8; color: #fff; cursor: pointer; }
+    iframe { width: 100%; height: calc(100vh - 60px); border: none; background: #000; }
   </style>
 </head>
 <body>
@@ -58,13 +24,8 @@
 <script>
 async function registerSW() {
   if ("serviceWorker" in navigator) {
-    try {
-      // IMPORTANT: repo path included
-      await navigator.serviceWorker.register("/T3rr0r/sw.js");
-      console.log("Service worker registered");
-    } catch (e) {
-      console.error("SW registration failed", e);
-    }
+    await navigator.serviceWorker.register("./sw.js");
+    console.log("Service worker registered");
   }
 }
 
@@ -80,8 +41,7 @@ function go() {
     target = "https://duckduckgo.com/?q=" + encodeURIComponent(input);
   }
 
-  // IMPORTANT: repo path included
-  iframe.src = "/T3rr0r/proxy/" + btoa(target);
+  iframe.src = "proxy/" + btoa(target);
 }
 </script>
 
