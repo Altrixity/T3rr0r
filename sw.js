@@ -1,14 +1,10 @@
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  // Only intercept /proxy/<base64>
-  if (url.pathname.startsWith("/proxy/")) {
-    const encoded = url.pathname.replace("/proxy/", "");
+  if (url.pathname.includes("/proxy/")) {
+    const encoded = url.pathname.split("/proxy/")[1];
     const decoded = atob(encoded);
 
-    event.respondWith(fetch(decoded, {
-      mode: "cors",
-      credentials: "omit"
-    }));
+    event.respondWith(fetch(decoded, { mode: "cors" }));
   }
 });
